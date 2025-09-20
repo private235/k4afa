@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Barcode Generator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-group input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .barcode-container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .barcode {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .barcode h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .barcode canvas {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+    <h2>Barcode Generator</h2>
+
+    <div class="input-group">
+        <label for="barcode1">Barcode 1:</label>
+        <input type="text" id="barcode1" oninput="generateAllBarcodes()" />
+        <label for="barcode2">Barcode 2:</label>
+        <input type="text" id="barcode2" oninput="generateAllBarcodes()" />
+        <label for="barcode3">Barcode 3:</label>
+        <input type="text" id="barcode3" oninput="generateAllBarcodes()" />
+        <label for="barcode4">Barcode 4:</label>
+        <input type="text" id="barcode4" oninput="generateAllBarcodes()" />
+        <label for="barcode5">Barcode 5:</label>
+        <input type="text" id="barcode5" oninput="generateAllBarcodes()" />
+    </div>
+
+    <div class="barcode-container" id="barcode-output">
+        </div>
+
+    <script>
+        function generateAllBarcodes() {
+            const outputContainer = document.getElementById('barcode-output');
+            outputContainer.innerHTML = '';
+
+            for (let i = 1; i <= 5; i++) {
+                const value = document.getElementById(`barcode${i}`).value.trim();
+
+                if (value) {
+                    const barcodeDiv = document.createElement('div');
+                    barcodeDiv.className = 'barcode';
+                    
+                    const title = document.createElement('h4');
+                    title.textContent = `Barcode ${i}: ${value}`;
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.id = `canvas${i}`;
+                    
+                    barcodeDiv.appendChild(title);
+                    barcodeDiv.appendChild(canvas);
+                    outputContainer.appendChild(barcodeDiv);
+
+                    try {
+                        JsBarcode(canvas, value, {
+                            format: "CODE128",
+                            displayValue: false,
+                            height: 60,
+                            margin: 10,
+                            background: "#fff",
+                            lineColor: "#000",
+                        });
+                    } catch (e) {
+                        console.error("Error generating barcode:", e);
+                        // Optional: Display an error message on the page
+                        title.textContent = `Barcode ${i}: Invalid Value`;
+                        canvas.style.display = 'none';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
