@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ملف العضو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #175791;
+            --light-background: #F5F6FA;
+            --dark-text: #2D3436;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: var(--light-background);
+            color: var(--dark-text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .profile-header h1 {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .info-card {
+            background-color: var(--light-background);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+        }
+
+        .info-card p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .info-card strong {
+            color: var(--dark-text);
+            font-weight: 600;
+        }
+
+        .info-card .label {
+            font-weight: 400;
+            color: #888;
+        }
+
+        .badges-section {
+            margin-top: 24px;
+        }
+
+        .badges-section h3 {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            text-align: right;
+        }
+
+        .badges-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .badge-chip {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 24px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 5px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="profile-container">
+        <div class="profile-header">
+            <h1>ملف العضو</h1>
+        </div>
+        <div id="profile-details">
+            <div style="text-align: center; color: #888;">جاري تحميل البيانات...</div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: 'AIzaSyC8Zd01zFsuYrKliskjkm2epaghD0IPI0w',
+            appId: '1:485361720518:web:cc5aad094d27acad038bc7',
+            messagingSenderId: '485361720518',
+            projectId: 'k4afa-9a62a',
+            authDomain: 'k4afa-9a62a.firebaseapp.com',
+            databaseURL: 'https://k4afa-9a62a-default-rtdb.firebaseio.com',
+            storageBucket: 'k4afa-9a62a.firebasestorage.app',
+            measurementId: 'G-WF72558LHK',
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const database = firebase.database();
+        const memcoRef = database.ref('memco');
+        const profileDetailsContainer = document.getElementById('profile-details');
+
+        function getUidFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('uid');
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function renderProfile(member) {
+            if (!member) {
+                profileDetailsContainer.innerHTML = '<div style="text-align: center; color: #888;">لم يتم العثور على بيانات هذا العضو.</div>';
+                return;
+            }
+
+            const badgesHtml = member.badges && member.badges.length > 0
+                ? `<div class="badges-section">
+                     <h3>الشارات الحاصل عليها</h3>
+                     <div class="badges-list">
+                         ${member.badges.map(badge => `<span class="badge-chip">${badge}</span>`).join('')}
+                     </div>
+                   </div>`
+                : '';
+                
+            profileDetailsContainer.innerHTML = `
+                <div class="profile-header">
+                    <h1>${member.name || 'لا يوجد اسم'}</h1>
+                    <small style="color:#888;">المرحلة: ${member.stage || 'غير محدد'}</small>
+                </div>
+                
+                <h2 class="section-title">البيانات الشخصية</h2>
+                <div class="info-card"><p><span class="label">الهاتف:</span> <strong>${member.phone || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">تاريخ الميلاد:</span> <strong>${formatDate(member.dateOfBirth) || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">الرقم القومي:</span> <strong>${member.nationalId || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">العنوان:</span> <strong>${member.address || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">أب الاعتراف:</span> <strong>${member.confessor || 'غير محدد'}</strong></p></div>
+
+                <h2 class="section-title">بيانات الأسرة</h2>
+                <div class="info-card"><p><span class="label">اسم الأب:</span> <strong>${member.fatherName || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">وظيفة الأب:</span> <strong>${member.fatherJob || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">هاتف الأب:</span> <strong>${member.fatherPhone || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">اسم الأم:</span> <strong>${member.motherName || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">وظيفة الأم:</span> <strong>${member.motherJob || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">هاتف الأم:</span> <strong>${member.motherPhone || 'غير محدد'}</strong></p></div>
+
+                <h2 class="section-title">معلومات إضافية</h2>
+                <div class="info-card"><p><span class="label">السنة الدراسية:</span> <strong>${member.academicYear || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">الهوايات:</span> <strong>${member.hobbies || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">الأمراض:</span> <strong>${member.diseases || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">الأدوية:</span> <strong>${member.medicines || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">تاريخ الالتحاق بالمرحلة:</span> <strong>${formatDate(member.joiningDate) || 'غير محدد'}</strong></p></div>
+                <div class="info-card"><p><span class="label">تاريخ الالتحاق بالمجموعة:</span> <strong>${formatDate(member.groupJoiningDate) || 'غير محدد'}</strong></p></div>
+
+                ${badgesHtml}
+            `;
+        }
+
+        const uid = getUidFromUrl();
+        if (uid) {
+            memcoRef.child(uid).once('value', (snapshot) => {
+                const member = snapshot.val();
+                renderProfile(member);
+            });
+        } else {
+            profileDetailsContainer.innerHTML = '<div style="text-align: center; color: #888;">لم يتم تحديد العضو.</div>';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة الأعضاء</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #175791;
+            --light-background: #F5F6FA;
+            --dark-text: #2D3436;
+            --danger-color: #E74C3C;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: var(--light-background);
+            color: var(--dark-text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        /* Search and Filter Section */
+        .search-filter-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-input, .filter-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            direction: rtl; /* For RTL text alignment */
+        }
+        
+        .filter-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%232D3436'><polygon points='0,0 10,0 5,10'/></svg>") no-repeat right 15px center;
+            background-size: 10px;
+            padding-left: 30px;
+        }
+
+        .members-list {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .member-item:last-child {
+            border-bottom: none;
+        }
+
+        .member-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .member-info span {
+            font-weight: bold;
+            color: var(--dark-text);
+        }
+
+        .member-info small {
+            color: #888;
+        }
+
+        .member-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .loading-text {
+            text-align: center;
+            color: #888;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>قائمة الأعضاء</h1>
+        </div>
+        
+        <div class="search-filter-section">
+            <input type="text" id="searchInput" class="search-input" placeholder="ابحث بالاسم...">
+            <select id="stageFilter" class="filter-select">
+                <option value="all">كل المراحل</option>
+                <option value="براعم">براعم</option>
+                <option value="اشبال">اشبال</option>
+                <option value="فتيان">فتيان</option>
+                <option value="متقدم">متقدم</option>
+                <option value="جوالة">جوالة</option>
+                <option value="قادة">قادة</option>
+            </select>
+        </div>
+
+        <div id="alert-message"></div>
+        
+        <div class="members-list" id="members-container">
+            <div class="loading-text">جاري تحميل الأعضاء...</div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <p>هل أنت متأكد من حذف هذا العضو؟</p>
+            <div class="modal-buttons">
+                <button id="confirmDeleteBtn" class="btn btn-danger">تأكيد الحذف</button>
+                <button id="cancelDeleteBtn" class="btn btn-primary">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script>
+        // تهيئة Firebase (تأكد من استخدام إعداداتك الخاصة)
+        const firebaseConfig = {
+            apiKey: 'AIzaSyC8Zd01zFsuYrKliskjkm2epaghD0IPI0w',
+            appId: '1:485361720518:web:cc5aad094d27acad038bc7',
+            messagingSenderId: '485361720518',
+            projectId: 'k4afa-9a62a',
+            authDomain: 'k4afa-9a62a.firebaseapp.com',
+            databaseURL: 'https://k4afa-9a62a-default-rtdb.firebaseio.com',
+            storageBucket: 'k4afa-9a62a.firebasestorage.app',
+            measurementId: 'G-WF72558LHK',
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const database = firebase.database();
+        const memcoRef = database.ref('memco');
+
+        const membersContainer = document.getElementById('members-container');
+        const alertMessageDiv = document.getElementById('alert-message');
+        const searchInput = document.getElementById('searchInput');
+        const stageFilter = document.getElementById('stageFilter');
+        
+        const deleteModal = document.getElementById('deleteModal');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        let memberToDeleteUid = null;
+        let allMembersData = {}; // لتخزين جميع الأعضاء محليًا
+
+        function showAlert(message, type = 'success') {
+            alertMessageDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                alertMessageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function renderMembers(membersToRender) {
+            membersContainer.innerHTML = '';
+            if (Object.keys(membersToRender).length === 0) {
+                membersContainer.innerHTML = '<div class="loading-text">لا يوجد أعضاء مطابقون للبحث أو الفلترة.</div>';
+                return;
+            }
+
+            Object.keys(membersToRender).forEach(uid => {
+                const member = membersToRender[uid];
+                const memberItem = document.createElement('div');
+                memberItem.className = 'member-item';
+                memberItem.innerHTML = `
+                    <div class="member-info">
+                        <span>${member.name || 'لا يوجد اسم'}</span>
+                        <small>المرحلة: ${member.stage || 'غير محدد'}</small>
+                    </div>
+                    <div class="member-actions">
+                        <button class="btn btn-primary view-btn" data-uid="${uid}">عرض</button>
+                        <button class="btn btn-danger delete-btn" data-uid="${uid}">حذف</button>
+                    </div>
+                `;
+                membersContainer.appendChild(memberItem);
+            });
+
+            document.querySelectorAll('.view-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const uid = e.target.dataset.uid;
+                    window.location.href = `profile.html?uid=${uid}`;
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    memberToDeleteUid = e.target.dataset.uid;
+                    deleteModal.style.display = 'block';
+                });
+            });
+        }
+
+        function filterAndSearch() {
+            const searchQuery = searchInput.value.toLowerCase();
+            const selectedStage = stageFilter.value;
+            
+            let filteredMembers = {};
+            
+            // فلترة حسب المرحلة أولاً
+            for (const uid in allMembersData) {
+                const member = allMembersData[uid];
+                if (selectedStage === 'all' || member.stage === selectedStage) {
+                    filteredMembers[uid] = member;
+                }
+            }
+            
+            // البحث بالاسم داخل النتائج المفلترة
+            let finalResults = {};
+            if (searchQuery === '') {
+                finalResults = filteredMembers;
+            } else {
+                for (const uid in filteredMembers) {
+                    const member = filteredMembers[uid];
+                    if (member.name && member.name.toLowerCase().includes(searchQuery)) {
+                        finalResults[uid] = member;
+                    }
+                }
+            }
+            
+            renderMembers(finalResults);
+        }
+        
+        searchInput.addEventListener('input', filterAndSearch);
+        stageFilter.addEventListener('change', filterAndSearch);
+
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (memberToDeleteUid) {
+                try {
+                    await memcoRef.child(memberToDeleteUid).remove();
+                    showAlert('تم حذف العضو بنجاح', 'success');
+                } catch (error) {
+                    console.error('Error removing member:', error);
+                    showAlert('حدث خطأ أثناء حذف العضو.', 'danger');
+                } finally {
+                    deleteModal.style.display = 'none';
+                    memberToDeleteUid = null;
+                }
+            }
+        });
+
+        cancelDeleteBtn.addEventListener('click', () => {
+            deleteModal.style.display = 'none';
+            memberToDeleteUid = null;
+        });
+
+        // الاستماع للتغييرات في قائمة الأعضاء
+        memcoRef.on('value', (snapshot) => {
+            allMembersData = snapshot.val() || {};
+            filterAndSearch(); // إعادة الفلترة والبحث عند أي تغيير
+        });
+    </script>
+</body>
+</html>
